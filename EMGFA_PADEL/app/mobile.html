@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Padel Mobile</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="mobile-version">
+    <div id="app">
+        <!-- Navegação -->
+        <nav class="navbar">
+            <div class="navbar-container">
+                <div class="navbar-brand">
+                    <img src="logo_P_EMGFA.png" alt="EMGFA Logo" class="navbar-logo">
+                    <span>PADEL Mobile</span>
+                </div>
+                <div class="nav-buttons">
+                    <button class="nav-btn active" data-page="classificacao">Classificação</button>
+                    <button class="nav-btn" data-page="novo-jogo">Novo Jogo</button>
+                    <button class="nav-btn" data-page="historico">Histórico</button>
+                </div>
+                <button id="btn-close-app" class="btn btn-secondary btn-close" type="button">Fechar</button>
+            </div>
+        </nav>
+
+        <!-- Página: Classificação -->
+        <div id="classificacao" class="page active">
+            <div class="container">
+                <h1>Classificação Geral</h1>
+                
+                <div class="filters">
+                    <input type="text" id="search-jogador" placeholder="🔍 Procurar jogador..." class="search-input">
+                    <div style="display:flex;gap:0.5rem;align-items:center;">
+                        <button id="btn-export-online" class="btn btn-small btn-secondary" type="button">Exportar Online</button>
+                        <button id="btn-import-online" class="btn btn-small btn-secondary" type="button">Importar Online</button>
+                    </div>
+                </div>
+
+                <div id="classificacao-container" class="classificacao-table">
+                    <div class="table-header">
+                        <div class="table-cell rank">Pos</div>
+                        <div class="table-cell name">Jogador</div>
+                        <div class="table-cell pts">Pts</div>
+                        <div class="table-cell stats">Jogos</div>
+                        <div class="table-cell stats">V-D</div>
+                    </div>
+                    <div id="clasificacao-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Página: Novo Jogo -->
+        <div id="novo-jogo" class="page">
+            <div class="container">
+                <h1>Registar Novo Jogo</h1>
+                
+                <form id="form-novo-jogo" class="game-form">
+                    <div class="form-section">
+                        <h3>Equipa A</h3>
+                        <div class="form-group">
+                            <label>Jogador 1 *</label>
+                            <input type="text" id="equipa-a-j1" placeholder="Nome..." list="jogadores-list" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Jogador 2 *</label>
+                            <input type="text" id="equipa-a-j2" placeholder="Nome..." list="jogadores-list" required>
+                        </div>
+                    </div>
+
+                    <div class="vs-separator">VS</div>
+
+                    <div class="form-section">
+                        <h3>Equipa B</h3>
+                        <div class="form-group">
+                            <label>Jogador 1 *</label>
+                            <input type="text" id="equipa-b-j1" placeholder="Nome..." list="jogadores-list" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Jogador 2 *</label>
+                            <input type="text" id="equipa-b-j2" placeholder="Nome..." list="jogadores-list" required>
+                        </div>
+                    </div>
+
+                    <datalist id="jogadores-list"></datalist>
+
+                    <div class="form-section">
+                        <h3>Resultado (Best of 3 Sets)</h3>
+                        
+                        <div class="sets-container">
+                            <div class="set-item">
+                                <label>Set 1: Equipa A</label>
+                                <input type="number" id="set1-a" min="0" max="10" required>
+                                <span class="vs">-</span>
+                                <input type="number" id="set1-b" min="0" max="10" required>
+                                <label>Equipa B</label>
+                            </div>
+
+                            <div class="set-item">
+                                <label>Set 2: Equipa A</label>
+                                <input type="number" id="set2-a" min="0" max="10" required>
+                                <span class="vs">-</span>
+                                <input type="number" id="set2-b" min="0" max="10" required>
+                                <label>Equipa B</label>
+                            </div>
+
+                            <div class="set-item">
+                                <label>Set 3: Equipa A</label>
+                                <input type="number" id="set3-a" min="0" max="10">
+                                <span class="vs">-</span>
+                                <input type="number" id="set3-b" min="0" max="10">
+                                <label>Equipa B (se necessário)</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Data do Jogo</label>
+                        <input type="date" id="data-jogo">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Guardar Jogo</button>
+                    <button type="reset" class="btn btn-secondary">Limpar</button>
+                </form>
+
+                <div id="msg-jogo" class="message"></div>
+            </div>
+        </div>
+
+        <!-- Página: Histórico -->
+        <div id="historico" class="page">
+            <div class="container">
+                <h1>Histórico de Jogos</h1>
+                
+                <div class="filters">
+                    <button id="btn-ordenar" class="btn btn-small">Ordenar por Data ↓</button>
+                    <button id="btn-limpar-historico" class="btn btn-small btn-danger">Limpar Histórico</button>
+                </div>
+
+                <div id="historico-container" class="games-list">
+                    <!-- Jogos serão preenchidos aqui -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/database.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

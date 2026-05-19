@@ -1,0 +1,1070 @@
+# Padel - Gestor de Resultados Online
+Versão **deploy-ready** para **Vercel** e **Netlify**, baseada em **React + Vite + TailwindCSS + lucide-react**.
+> **Nota importante:** esta aplicação usa `localStorage`, por isso os dados ficam guardados apenas no navegador/dispositivo do utilizador.
+
+
+---
+
+
+## Estrutura do projeto
+
+
+```text
+padel-gestor-resultados/
+├── index.html
+├── package.json
+├── postcss.config.js
+├── tailwind.config.js
+├── vite.config.js
+├── vercel.json
+├── netlify.toml
+└── src/
+    ├── App.jsx
+    ├── main.jsx
+    ├── index.css
+    └── components/
+        └── ui/
+            ├── button.jsx
+            ├── card.jsx
+            └── input.jsx
+```
+
+
+---
+
+
+## `package.json`
+
+
+```json
+{
+  "name": "padel-gestor-resultados",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "lucide-react": "^0.511.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.13",
+    "vite": "^5.4.10"
+  }
+}
+```
+---
+## `vite.config.js`
+
+
+```js
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import path from "path";
+
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
+});
+```
+---
+## `index.html`
+
+
+```html
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Aplicação de gestão de resultados de padel com classificação, histórico e registo de jogos."
+    />
+    <title>Padel - Gestor de Resultados</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    /src/main.jsx</script>
+  </body>
+</html>
+```
+---
+## `postcss.config.js`
+
+
+```js
+export default {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+};
+```
+---
+## `tailwind.config.js`
+
+
+```js
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};
+```
+---
+## `src/main.jsx`
+
+
+```jsx
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
+import "./index.css";
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+```
+---
+## `src/index.css`
+
+
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #f8fafc;
+}
+
+button,
+input {
+  font: inherit;
+}
+```
+---
+## `src/components/ui/button.jsx`
+
+
+```jsx
+export function Button({
+  children,
+  className = "",
+  variant = "default",
+  type = "button",
+  ...props
+}) {
+  const base =
+    "inline-flex items-center justify-center gap-2 border font-medium transition focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
+  const variants = {
+    default:
+      "border-transparent bg-slate-900 text-white hover:bg-slate-800 focus:ring-slate-400",
+    secondary:
+      "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 focus:ring-slate-300",
+    ghost:
+      "border-transparent bg-transparent text-current hover:bg-white/10 focus:ring-white/40",
+    destructive:
+      "border-transparent bg-red-600 text-white hover:bg-red-700 focus:ring-red-300",
+  };
+
+  return (
+    <button
+      type={type}
+      className={`${base} ${variants[variant] || variants.default} ${className}`}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+}
+```
+---
+## `src/components/ui/input.jsx`
+
+
+```jsx
+export function Input({ className = "", ...props }) {
+  return (
+    <input
+      className={`w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-800 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 ${className}`}
+      {...props}
+    />
+  );
+}
+```
+---
+## `src/components/ui/card.jsx`
+
+
+```jsx
+export function Card({ children, className = "" }) {
+  return <div className={`bg-white ${className}`}>{children}</div>;
+}
+
+export function CardHeader({ children, className = "" }) {
+  return <div className={className}>{children}</div>;
+}
+
+export function CardTitle({ children, className = "" }) {
+  return <div className={className}>{children}</div>;
+}
+
+export function CardContent({ children, className = "" }) {
+  return <div className={className}>{children}</div>;
+}
+```
+---
+## `src/App.jsx`
+
+
+```jsx
+import React, { useEffect, useMemo, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Trophy,
+  Search,
+  CalendarDays,
+  Trash2,
+  X,
+  Medal,
+  PlusCircle,
+  History,
+  ListOrdered,
+} from "lucide-react";
+const STORAGE_KEYS = {
+  games: "padel_games",
+  players: "padel_players",
+  stats: "padel_stats",
+};
+
+function normalizeName(name) {
+  return (name || "").trim().replace(/\s+/g, " ");
+}
+
+function todayISO() {
+  return new Date().toISOString().split("T")[0];
+}
+
+function initializeDatabase() {
+  if (typeof window === "undefined") return;
+  if (!localStorage.getItem(STORAGE_KEYS.games)) {
+    localStorage.setItem(STORAGE_KEYS.games, JSON.stringify([]));
+  }
+  if (!localStorage.getItem(STORAGE_KEYS.players)) {
+    localStorage.setItem(STORAGE_KEYS.players, JSON.stringify({}));
+  }
+  if (!localStorage.getItem(STORAGE_KEYS.stats)) {
+    localStorage.setItem(STORAGE_KEYS.stats, JSON.stringify({}));
+  }
+}
+
+function getGames() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEYS.games) || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function getPlayersMap() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEYS.players) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function getStatsMap() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEYS.stats) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function saveGames(games) {
+  localStorage.setItem(STORAGE_KEYS.games, JSON.stringify(games));
+}
+
+function savePlayers(players) {
+  localStorage.setItem(STORAGE_KEYS.players, JSON.stringify(players));
+}
+
+function saveStats(stats) {
+  localStorage.setItem(STORAGE_KEYS.stats, JSON.stringify(stats));
+}
+
+function freshPlayerStats(nome) {
+  return {
+    nome,
+    pontos: 0,
+    jogos: 0,
+    vitorias: 0,
+    derrotas: 0,
+    setsGanhos: 0,
+    setsPerdidos: 0,
+  };
+}
+
+function applyGameToStats(stats, players, game) {
+  const nomes = [game.equipa_a.j1, game.equipa_a.j2, game.equipa_b.j1, game.equipa_b.j2];
+
+  nomes.forEach((jogador) => {
+    if (!stats[jogador]) stats[jogador] = freshPlayerStats(jogador);
+    if (!players[jogador]) players[jogador] = true;
+  });
+
+  if (game.winner === "A") {
+    stats[game.equipa_a.j1].pontos += 3;
+    stats[game.equipa_a.j2].pontos += 3;
+    stats[game.equipa_a.j1].vitorias += 1;
+    stats[game.equipa_a.j2].vitorias += 1;
+
+    stats[game.equipa_b.j1].pontos += 1;
+    stats[game.equipa_b.j2].pontos += 1;
+    stats[game.equipa_b.j1].derrotas += 1;
+    stats[game.equipa_b.j2].derrotas += 1;
+  } else {
+    stats[game.equipa_b.j1].pontos += 3;
+    stats[game.equipa_b.j2].pontos += 3;
+    stats[game.equipa_b.j1].vitorias += 1;
+    stats[game.equipa_b.j2].vitorias += 1;
+
+    stats[game.equipa_a.j1].pontos += 1;
+    stats[game.equipa_a.j2].pontos += 1;
+    stats[game.equipa_a.j1].derrotas += 1;
+    stats[game.equipa_a.j2].derrotas += 1;
+  }
+
+  [game.equipa_a.j1, game.equipa_a.j2, game.equipa_b.j1, game.equipa_b.j2].forEach((j) => {
+    stats[j].jogos += 1;
+  });
+
+  game.sets.forEach((set) => {
+    const scoreA = Number(set.a) || 0;
+    const scoreB = Number(set.b) || 0;
+
+
+    if (scoreA > scoreB) {
+      stats[game.equipa_a.j1].setsGanhos += 1;
+      stats[game.equipa_a.j2].setsGanhos += 1;
+      stats[game.equipa_b.j1].setsPerdidos += 1;
+      stats[game.equipa_b.j2].setsPerdidos += 1;
+    } else if (scoreB > scoreA) {
+      stats[game.equipa_b.j1].setsGanhos += 1;
+      stats[game.equipa_b.j2].setsGanhos += 1;
+      stats[game.equipa_a.j1].setsPerdidos += 1;
+      stats[game.equipa_a.j2].setsPerdidos += 1;
+    }
+  });
+}
+
+function recalculateFromGames(games) {
+  const stats = {};
+  const players = {};
+  games.forEach((game) => applyGameToStats(stats, players, game));
+  saveStats(stats);
+  savePlayers(players);
+  return { stats, players };
+}
+
+function medalha(index) {
+  if (index === 0) return "🥇";
+  if (index === 1) return "🥈";
+  if (index === 2) return "🥉";
+  return "";
+}
+
+function formatarData(dateStr) {
+  const date = new Date(`${dateStr}T00:00:00`);
+  return date.toLocaleDateString("pt-PT", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
+function validarJogo(form) {
+  const equipa_a_j1 = normalizeName(form.equipa_a_j1);
+  const equipa_a_j2 = normalizeName(form.equipa_a_j2);
+  const equipa_b_j1 = normalizeName(form.equipa_b_j1);
+  const equipa_b_j2 = normalizeName(form.equipa_b_j2);
+
+  if (!equipa_a_j1 || !equipa_a_j2 || !equipa_b_j1 || !equipa_b_j2) {
+    throw new Error("Por favor, preencha todos os nomes dos jogadores.");
+  }
+
+  const todos = [equipa_a_j1, equipa_a_j2, equipa_b_j1, equipa_b_j2].map((n) => n.toLowerCase());
+  if (new Set(todos).size !== 4) {
+    throw new Error("Não pode haver jogadores repetidos no mesmo jogo.");
+  }
+
+  const sets = [];
+
+
+  for (let i = 1; i <= 3; i += 1) {
+    const a = form[`set${i}a`];
+    const b = form[`set${i}b`];
+    const hasA = a !== "" && a !== null && a !== undefined;
+    const hasB = b !== "" && b !== null && b !== undefined;
+
+    if (i <= 2) {
+      if (!hasA || !hasB) throw new Error(`Set ${i} incompleto.`);
+      if (Number(a) === Number(b)) throw new Error(`Set ${i} não pode terminar empatado.`);
+      sets.push({ a: Number(a), b: Number(b) });
+    } else if (hasA || hasB) {
+      if (!hasA || !hasB) {
+        throw new Error("O set 3 deve ter ambos os valores ou ficar vazio.");
+      }
+      if (Number(a) === Number(b)) {
+        throw new Error("O set 3 não pode terminar empatado.");
+      }
+      sets.push({ a: Number(a), b: Number(b) });
+    }
+  }
+
+  if (sets.length < 2) throw new Error("Deve registar pelo menos 2 sets.");
+
+  let setsVitaA = 0;
+  let setsVitaB = 0;
+  let winner = null;
+
+  for (let i = 0; i < sets.length; i += 1) {
+    if (sets[i].a > sets[i].b) setsVitaA += 1;
+    if (sets[i].b > sets[i].a) setsVitaB += 1;
+
+    if (setsVitaA === 2) {
+      winner = "A";
+      if (i < sets.length - 1) {
+        throw new Error("Há sets a mais: o jogo já estava decidido antes do último set preenchido.");
+      }
+      break;
+    }
+
+
+    if (setsVitaB === 2) {
+      winner = "B";
+      if (i < sets.length - 1) {
+        throw new Error("Há sets a mais: o jogo já estava decidido antes do último set preenchido.");
+      }
+      break;
+    }
+  }
+
+  if (!winner) throw new Error("Resultado inválido ou incompleto.");
+
+  return {
+    id: Date.now(),
+    date: form.date || todayISO(),
+    equipa_a: { j1: equipa_a_j1, j2: equipa_a_j2 },
+    equipa_b: { j1: equipa_b_j1, j2: equipa_b_j2 },
+    sets,
+    winner,
+  };
+}
+
+export default function App() {
+  const [currentPage, setCurrentPage] = useState("classificacao");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortOrder, setSortOrder] = useState("desc");
+  const [games, setGames] = useState([]);
+  const [stats, setStats] = useState({});
+  const [players, setPlayers] = useState({});
+  const [message, setMessage] = useState({ type: "", text: "" });
+  const [form, setForm] = useState({
+    equipa_a_j1: "",
+    equipa_a_j2: "",
+    equipa_b_j1: "",
+    equipa_b_j2: "",
+    set1a: "",
+    set1b: "",
+    set2a: "",
+    set2b: "",
+    set3a: "",
+    set3b: "",
+    date: todayISO(),
+  });
+
+  useEffect(() => {
+    initializeDatabase();
+    const loadedGames = getGames();
+    const loadedPlayers = getPlayersMap();
+    const loadedStats = getStatsMap();
+    setGames(loadedGames);
+    setPlayers(loadedPlayers);
+    setStats(loadedStats);
+  }, []);
+
+  const classificacao = useMemo(() => {
+    return Object.values(stats)
+      .sort((a, b) => {
+        if (b.pontos !== a.pontos) return b.pontos - a.pontos;
+        const diffA = a.vitorias - a.derrotas;
+        const diffB = b.vitorias - b.derrotas;
+        if (diffB !== diffA) return diffB - diffA;
+        if (b.vitorias !== a.vitorias) return b.vitorias - a.vitorias;
+        return a.nome.localeCompare(b.nome, "pt-PT", { sensitivity: "base" });
+      })
+      .map((player, index) => ({
+        ...player,
+        posicao: index + 1,
+        diferenca: player.vitorias - player.derrotas,
+      }));
+  }, [stats]);
+
+  const classificacaoFiltrada = useMemo(() => {
+    return classificacao.filter((p) => p.nome.toLowerCase().includes(searchTerm.toLowerCase()));
+  }, [classificacao, searchTerm]);
+
+  const jogadoresList = useMemo(
+    () => Object.keys(players).sort((a, b) => a.localeCompare(b, "pt-PT", { sensitivity: "base" })),
+    [players]
+  );
+  const historicoOrdenado = useMemo(() => {
+    return [...games].sort((a, b) => {
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
+    });
+  }, [games, sortOrder]);
+
+  function syncState(nextGames) {
+    saveGames(nextGames);
+    const { stats: nextStats, players: nextPlayers } = recalculateFromGames(nextGames);
+    setGames(nextGames);
+    setStats({ ...nextStats });
+    setPlayers({ ...nextPlayers });
+  }
+
+  function handleFormChange(field, value) {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  function resetForm() {
+    setForm({
+      equipa_a_j1: "",
+      equipa_a_j2: "",
+      equipa_b_j1: "",
+      equipa_b_j2: "",
+      set1a: "",
+      set1b: "",
+      set2a: "",
+      set2b: "",
+      set3a: "",
+      set3b: "",
+      date: todayISO(),
+    });
+  }
+
+  function guardarJogo(e) {
+    e.preventDefault();
+
+
+    try {
+      const novoJogo = validarJogo(form);
+      const nextGames = [...games, novoJogo];
+      syncState(nextGames);
+      resetForm();
+      setMessage({ type: "success", text: "✅ Jogo guardado com sucesso!" });
+      setCurrentPage("classificacao");
+      setTimeout(() => setMessage({ type: "", text: "" }), 3000);
+    } catch (error) {
+      setMessage({ type: "error", text: `❌ ${error.message}` });
+    }
+  }
+
+  function removerJogo(gameId) {
+    const ok = window.confirm("Tem a certeza que deseja remover este jogo? Esta ação não pode ser desfeita.");
+    if (!ok) return;
+
+
+    const nextGames = games.filter((g) => g.id !== gameId);
+    syncState(nextGames);
+    setMessage({ type: "success", text: "✅ Jogo removido com sucesso." });
+    setTimeout(() => setMessage({ type: "", text: "" }), 2500);
+  }
+
+  function limparHistorico() {
+    const ok1 = window.confirm("⚠️ Isto vai remover todos os jogos e repor a classificação. Deseja continuar?");
+    if (!ok1) return;
+
+
+    const ok2 = window.confirm("Esta ação é irreversível. Confirmar limpeza total?");
+    if (!ok2) return;
+
+
+    localStorage.removeItem(STORAGE_KEYS.games);
+    localStorage.removeItem(STORAGE_KEYS.players);
+    localStorage.removeItem(STORAGE_KEYS.stats);
+    initializeDatabase();
+    setGames([]);
+    setPlayers({});
+    setStats({});
+    setMessage({ type: "success", text: "✅ Base de dados limpa com sucesso!" });
+    setCurrentPage("classificacao");
+    setTimeout(() => setMessage({ type: "", text: "" }), 3000);
+  }
+
+  function closeApplication() {
+    window.alert("Para encerrar a aplicação, feche este separador ou janela do navegador.");
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-800">
+      <header className="sticky top-0 z-20 border-b border-slate-200 bg-gradient-to-r from-blue-600 to-sky-400 text-white shadow-sm">
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-3 text-2xl font-bold tracking-tight">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-blue-600 shadow-sm">
+              <Trophy className="h-6 w-6" />
+            </div>
+            <span>PADEL</span>
+          </div>
+
+          <nav className="grid grid-cols-3 gap-2 md:flex md:flex-wrap md:justify-center">
+            <Button
+              variant={currentPage === "classificacao" ? "secondary" : "ghost"}
+              className={
+                currentPage === "classificacao"
+                  ? "rounded-full bg-white text-blue-600 hover:bg-white/90"
+                  : "rounded-full bg-white/20 text-white hover:bg-white/30"
+              }
+              onClick={() => setCurrentPage("classificacao")}
+            >
+              <ListOrdered className="mr-2 h-4 w-4" />
+              Classificação
+            </Button>
+
+
+            <Button
+              variant={currentPage === "novo-jogo" ? "secondary" : "ghost"}
+              className={
+                currentPage === "novo-jogo"
+                  ? "rounded-full bg-white text-blue-600 hover:bg-white/90"
+                  : "rounded-full bg-white/20 text-white hover:bg-white/30"
+              }
+              onClick={() => setCurrentPage("novo-jogo")}
+            >
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Novo Jogo
+            </Button>
+
+
+            <Button
+              variant={currentPage === "historico" ? "secondary" : "ghost"}
+              className={
+                currentPage === "historico"
+                  ? "rounded-full bg-white text-blue-600 hover:bg-white/90"
+                  : "rounded-full bg-white/20 text-white hover:bg-white/30"
+              }
+              onClick={() => setCurrentPage("historico")}
+            >
+              <History className="mr-2 h-4 w-4" />
+              Histórico
+            </Button>
+          </nav>
+
+          <Button variant="secondary" className="rounded-full" onClick={closeApplication}>
+            <X className="mr-2 h-4 w-4" />
+            Fechar
+          </Button>
+        </div>
+      </header>
+
+      <main className="mx-auto w-full max-w-6xl p-4 md:p-6">
+        {message.text ? (
+          <div
+            className={`mb-4 rounded-2xl border px-4 py-3 text-sm font-medium shadow-sm ${
+              message.type === "success"
+                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                : "border-red-200 bg-red-50 text-red-700"
+            }`}
+          >
+            {message.text}
+          </div>
+        ) : null}
+
+        {currentPage === "classificacao" && (
+          <div className="space-y-4">
+            <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-blue-600">Classificação Geral</h1>
+                <p className="mt-1 text-sm text-slate-500">
+                  Tabela dinâmica calculada a partir dos jogos registados.
+                </p>
+              </div>
+
+
+              <div className="relative w-full md:max-w-sm">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Input
+                  className="rounded-2xl border-slate-200 bg-white pl-10 shadow-sm"
+                  placeholder="Procurar jogador..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <Card className="overflow-hidden rounded-3xl border-0 shadow-sm">
+              <CardContent className="p-0">
+                <div className="grid grid-cols-[56px_1fr_68px_72px_72px] gap-2 border-b bg-slate-100 px-3 py-3 text-xs font-semibold uppercase tracking-wide text-slate-600 md:grid-cols-[72px_1fr_96px_96px_96px] md:px-5 md:text-sm">
+                  <div className="text-center">Pos</div>
+                  <div>Jogador</div>
+                  <div className="text-center">Pts</div>
+                  <div className="text-center">Jogos</div>
+                  <div className="text-center">V-D</div>
+                </div>
+
+                {classificacaoFiltrada.length === 0 ? (
+                  <div className="px-6 py-12 text-center text-slate-400">
+                    {classificacao.length === 0
+                      ? "Nenhum jogo registado ainda."
+                      : "Jogador não encontrado."}
+                  </div>
+                ) : (
+                  classificacaoFiltrada.map((player) => {
+                    const isTop = player.posicao <= 3;
+                    const background =
+                      player.posicao === 1
+                        ? "border-l-4 border-yellow-400 bg-yellow-50/70"
+                        : player.posicao === 2
+                        ? "border-l-4 border-slate-300 bg-slate-50"
+                        : player.posicao === 3
+                        ? "border-l-4 border-amber-700/60 bg-amber-50/60"
+                        : "border-l-4 border-transparent";
+
+                    return (
+                      <div
+                        key={`${player.nome}-${player.posicao}`}
+                        className={`grid grid-cols-[56px_1fr_68px_72px_72px] gap-2 border-b px-3 py-3 text-sm transition hover:bg-slate-50 md:grid-cols-[72px_1fr_96px_96px_96px] md:px-5 ${background}`}
+                      >
+                        <div className="text-center font-bold text-blue-600">
+                          {player.posicao}
+                          <span className="ml-1">{medalha(player.posicao - 1)}</span>
+                        </div>
+                        <div className="truncate font-semibold text-slate-800">
+                          {player.nome}
+                          {isTop ? <Medal className="ml-2 inline h-4 w-4 text-amber-500" /> : null}
+                        </div>
+                        <div className="text-center font-bold text-emerald-600">{player.pontos}</div>
+                        <div className="text-center text-slate-500">{player.jogos}</div>
+                        <div className="text-center text-slate-500">
+                          {player.vitorias}-{player.derrotas}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {currentPage === "novo-jogo" && (
+          <div className="space-y-4">
+            <div>
+              <h1 className="text-3xl font-bold text-blue-600">Registar Novo Jogo</h1>
+              <p className="mt-1 text-sm text-slate-500">
+                Introduza equipas, sets e data. O ranking é atualizado automaticamente.
+              </p>
+            </div>
+
+            <Card className="rounded-3xl border-0 shadow-sm">
+              <CardContent className="p-4 md:p-6">
+                <form onSubmit={guardarJogo} className="space-y-8">
+                  <datalist id="jogadores-list">
+                    {jogadoresList.map((j) => (
+                      <option value={j} key={j} />
+                    ))}
+                  </datalist>
+
+                  <div className="grid gap-6 lg:grid-cols-[1fr_auto_1fr] lg:items-start">
+                    <section className="space-y-4">
+                      <h3 className="text-lg font-semibold text-slate-800">Equipa A</h3>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-slate-700">Jogador 1 *</label>
+                        <Input
+                          list="jogadores-list"
+                          value={form.equipa_a_j1}
+                          onChange={(e) => handleFormChange("equipa_a_j1", e.target.value)}
+                          placeholder="Nome..."
+                          className="rounded-2xl"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-slate-700">Jogador 2 *</label>
+                        <Input
+                          list="jogadores-list"
+                          value={form.equipa_a_j2}
+                          onChange={(e) => handleFormChange("equipa_a_j2", e.target.value)}
+                          placeholder="Nome..."
+                          className="rounded-2xl"
+                        />
+                      </div>
+                    </section>
+
+                    <div className="flex items-center justify-center py-2 lg:py-16">
+                      <div className="rounded-full bg-blue-50 px-5 py-3 text-xl font-bold tracking-wider text-blue-600 shadow-sm">
+                        VS
+                      </div>
+                    </div>
+
+                    <section className="space-y-4">
+                      <h3 className="text-lg font-semibold text-slate-800">Equipa B</h3>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-slate-700">Jogador 1 *</label>
+                        <Input
+                          list="jogadores-list"
+                          value={form.equipa_b_j1}
+                          onChange={(e) => handleFormChange("equipa_b_j1", e.target.value)}
+                          placeholder="Nome..."
+                          className="rounded-2xl"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-slate-700">Jogador 2 *</label>
+                        <Input
+                          list="jogadores-list"
+                          value={form.equipa_b_j2}
+                          onChange={(e) => handleFormChange("equipa_b_j2", e.target.value)}
+                          placeholder="Nome..."
+                          className="rounded-2xl"
+                        />
+                      </div>
+                    </section>
+                  </div>
+
+                  <section className="space-y-4">
+                    <h3 className="text-lg font-semibold text-slate-800">Resultado (Best of 3 Sets)</h3>
+                    <div className="grid gap-4 md:grid-cols-3">
+                      {[1, 2, 3].map((n) => (
+                        <Card key={n} className="rounded-2xl border border-slate-200 shadow-none">
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-base">
+                              Set {n}
+                              {n === 3 ? " (opcional)" : ""}
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="flex-1 space-y-1">
+                                <label className="text-xs font-medium text-slate-500">Equipa A</label>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  max="10"
+                                  value={form[`set${n}a`]}
+                                  onChange={(e) => handleFormChange(`set${n}a`, e.target.value)}
+                                  className="rounded-xl text-center"
+                                />
+                              </div>
+                              <div className="pt-5 text-lg font-bold text-slate-400">-</div>
+                              <div className="flex-1 space-y-1">
+                                <label className="text-xs font-medium text-slate-500">Equipa B</label>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  max="10"
+                                  value={form[`set${n}b`]}
+                                  onChange={(e) => handleFormChange(`set${n}b`, e.target.value)}
+                                  className="rounded-xl text-center"
+                                />
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </section>
+
+                  <section className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700">Data do Jogo</label>
+                    <div className="relative max-w-xs">
+                      <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                      <Input
+                        type="date"
+                        value={form.date}
+                        onChange={(e) => handleFormChange("date", e.target.value)}
+                        className="rounded-2xl pl-10"
+                      />
+                    </div>
+                  </section>
+
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <Button
+                      type="submit"
+                      className="rounded-2xl bg-gradient-to-r from-blue-600 to-sky-400 text-white hover:from-blue-700 hover:to-sky-500"
+                    >
+                      Guardar Jogo
+                    </Button>
+                    <Button type="button" variant="secondary" className="rounded-2xl" onClick={resetForm}>
+                      Limpar
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {currentPage === "historico" && (
+          <div className="space-y-4">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-blue-600">Histórico de Jogos</h1>
+                <p className="mt-1 text-sm text-slate-500">Consulte, ordene e remova jogos já registados.</p>
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button
+                  variant="secondary"
+                  className="rounded-2xl"
+                  onClick={() => setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"))}
+                >
+                  Ordenar por Data {sortOrder === "desc" ? "↓" : "↑"}
+                </Button>
+                <Button variant="destructive" className="rounded-2xl" onClick={limparHistorico}>
+                  Limpar Histórico
+                </Button>
+              </div>
+            </div>
+
+            {historicoOrdenado.length === 0 ? (
+              <Card className="rounded-3xl border-0 shadow-sm">
+                <CardContent className="px-6 py-12 text-center text-slate-400">
+                  Nenhum jogo registado.
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4">
+                {historicoOrdenado.map((game) => {
+                  const setsA = game.sets.map((s) => s.a).join("-");
+                  const setsB = game.sets.map((s) => s.b).join("-");
+                  const detalhes = game.sets.map((s, i) => `Set ${i + 1}: ${s.a}-${s.b}`).join(" | ");
+                  const teamAWinner = game.winner === "A";
+                  const teamBWinner = game.winner === "B";
+
+                  return (
+                    <Card key={game.id} className="rounded-3xl border-0 shadow-sm transition hover:shadow-md">
+                      <CardContent className="p-4 md:p-6">
+                        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                          <div>
+                            <div className="text-sm text-slate-500">📅 {formatarData(game.date)}</div>
+                          </div>
+                          <div className="inline-flex w-fit items-center rounded-full bg-blue-50 px-4 py-2 text-sm font-bold text-blue-600">
+                            {setsA} vs {setsB}
+                          </div>
+                          <Button
+                            variant="destructive"
+                            className="rounded-2xl"
+                            onClick={() => removerJogo(game.id)}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Remover
+                          </Button>
+                        </div>
+
+                        <div className="mt-5 grid gap-4 md:grid-cols-[1fr_auto_1fr] md:items-center">
+                          <div
+                            className={`rounded-2xl p-4 ${
+                              teamAWinner ? "border-l-4 border-emerald-500 bg-emerald-50" : "bg-slate-100"
+                            }`}
+                          >
+                            <div className="mb-2 font-bold">EQUIPA A {teamAWinner ? "🏆" : ""}</div>
+                            <div className="text-sm text-slate-600">👤 {game.equipa_a.j1}</div>
+                            <div className="text-sm text-slate-600">👤 {game.equipa_a.j2}</div>
+                          </div>
+
+                          <div className="hidden text-center text-lg font-bold text-blue-600 md:block">VS</div>
+
+                          <div
+                            className={`rounded-2xl p-4 ${
+                              teamBWinner ? "border-l-4 border-emerald-500 bg-emerald-50" : "bg-slate-100"
+                            }`}
+                          >
+                            <div className="mb-2 font-bold">EQUIPA B {teamBWinner ? "🏆" : ""}</div>
+                            <div className="text-sm text-slate-600">👤 {game.equipa_b.j1}</div>
+                            <div className="text-sm text-slate-600">👤 {game.equipa_b.j2}</div>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 border-t border-slate-200 pt-4 text-sm text-slate-500">📊 {detalhes}</div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
+```
+---
+
+
+## `netlify.toml`
+
+
+```toml
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+```
+---
+
+
+## `vercel.json`
+
+
+```json
+{
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
+```
+---

@@ -1,0 +1,1520 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Padel - Gestor de Resultados</title>
+    <style>
+/* Reset e Base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary: #007AFF;
+    --secondary: #5AC8FA;
+    --success: #34C759;
+    --danger: #FF3B30;
+    --warning: #FF9500;
+    --dark: #1C1C1E;
+    --light: #F2F2F7;
+    --border: #E5E5EA;
+    --text: #333;
+    --text-light: #666;
+}
+
+html, body {
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background-color: var(--light);
+    color: var(--text);
+}
+
+#app {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Navbar */
+.navbar {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: white;
+    padding: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.navbar-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 0 1rem;
+}
+
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.5rem;
+    font-weight: bold;
+    padding: 1rem 0;
+    min-width: 120px;
+}
+
+.navbar-logo {
+    width: 42px;
+    height: 42px;
+    object-fit: contain;
+    border-radius: 10px;
+    background: white;
+    padding: 4px;
+}
+
+.nav-buttons {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+}
+
+.nav-btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: none;
+    padding: 0.75rem 1rem;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    transition: all 0.3s ease;
+}
+
+.nav-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.nav-btn.active {
+    background: white;
+    color: var(--primary);
+    font-weight: bold;
+}
+
+/* Container Principal */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem;
+    width: 100%;
+}
+
+/* Páginas */
+.page {
+    flex: 1;
+    display: none;
+    padding-bottom: 2rem;
+    animation: fadeIn 0.3s ease-in;
+}
+
+.page.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+h1 {
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+    color: var(--primary);
+}
+
+h3 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    color: var(--text);
+}
+
+/* Classificação - Tabela */
+.classificacao-table {
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.table-header {
+    display: grid;
+    grid-template-columns: 50px 1fr 70px 80px 80px;
+    gap: 1rem;
+    background: linear-gradient(135deg, #f5f5f5 0%, #efefef 100%);
+    padding: 1rem;
+    font-weight: bold;
+    color: var(--text);
+    border-bottom: 2px solid var(--border);
+    position: sticky;
+    top: 0;
+}
+
+.table-row {
+    display: grid;
+    grid-template-columns: 50px 1fr 70px 80px 80px;
+    gap: 1rem;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+    transition: background-color 0.2s;
+}
+
+.table-row:hover {
+    background-color: #f9f9f9;
+}
+
+.table-row.top1 { border-left: 4px solid gold; background-color: #fffbf0; }
+.table-row.top2 { border-left: 4px solid #c0c0c0; background-color: #f9f9f9; }
+.table-row.top3 { border-left: 4px solid #cd7f32; background-color: #fef8f3; }
+
+.table-cell {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.table-cell.rank {
+    font-weight: bold;
+    text-align: center;
+    color: var(--primary);
+}
+
+.table-cell.name {
+    font-weight: 600;
+    color: var(--text);
+}
+
+.table-cell.pts {
+    font-weight: bold;
+    color: var(--success);
+    text-align: center;
+}
+
+.table-cell.stats {
+    text-align: center;
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+/* Filtros */
+.filters {
+    margin-bottom: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.search-input {
+    flex: 1;
+    min-width: 200px;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+}
+
+/* Formulário */
+.game-form {
+    background: white;
+    padding: 2rem 1rem;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.form-section {
+    margin-bottom: 2rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+}
+
+.vs-separator {
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--primary);
+    margin: 1.5rem 0;
+}
+
+/* Sets */
+.sets-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.set-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.set-item label {
+    flex: 0 0 100%;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+}
+
+.set-item input {
+    width: 60px;
+    padding: 0.5rem;
+    text-align: center;
+    font-size: 1.1rem;
+}
+
+.set-item .vs {
+    font-weight: bold;
+    color: var(--text-light);
+    min-width: 20px;
+    text-align: center;
+}
+
+/* Botões */
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: inline-block;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: white;
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.4);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+.btn-secondary {
+    background: var(--light);
+    color: var(--text);
+    border: 1px solid var(--border);
+    width: 100%;
+    margin-top: 0.5rem;
+}
+
+.btn-secondary:hover {
+    background: var(--border);
+}
+
+.btn-close {
+    width: auto;
+    margin-top: 0;
+    margin-left: 1rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+}
+
+.btn-small {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+.btn-danger {
+    background: var(--danger);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #ff2819;
+}
+
+.btn-delete {
+    background: var(--danger);
+    color: white;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+}
+.mobile-version .navbar-container {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.mobile-version .nav-buttons {
+    width: 100%;
+    justify-content: space-between;
+}
+
+.mobile-version .nav-btn {
+    flex: 1 1 auto;
+    min-width: 100px;
+}
+
+.mobile-version .btn-close {
+    width: 100%;
+    margin-left: 0;
+}
+
+.mobile-version .game-form {
+    padding: 1.5rem 0.75rem;
+}
+
+.mobile-version .container {
+    padding: 0.75rem;
+}
+/* Mensagens */
+.message {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 600;
+    min-height: 30px;
+    display: none;
+}
+
+.message.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+    display: block;
+}
+
+.message.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    display: block;
+}
+
+/* Histórico de Jogos */
+.games-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.game-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s;
+}
+
+.game-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.game-date {
+    font-size: 0.9rem;
+    color: var(--text-light);
+}
+
+.game-score {
+    font-weight: bold;
+    color: var(--primary);
+    background: rgba(0, 122, 255, 0.1);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+}
+
+.game-teams {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.team {
+    background: var(--light);
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.team.winner {
+    background: rgba(52, 199, 89, 0.1);
+    border-left: 4px solid var(--success);
+}
+
+.team-name {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.team-player {
+    font-size: 0.9rem;
+    color: var(--text-light);
+}
+
+.vs-label {
+    font-weight: bold;
+    color: var(--primary);
+}
+
+.game-sets {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+}
+
+.game-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    justify-content: flex-end;
+}
+
+/* Responsivo Mobile */
+@media (max-width: 768px) {
+    .navbar-container {
+        flex-direction: column;
+        padding: 0.5rem;
+        gap: 0.5rem;
+    }
+
+    .navbar-brand {
+        width: 100%;
+        text-align: center;
+        padding: 0.5rem 0;
+    }
+
+    .nav-buttons {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .container {
+        padding: 0.75rem;
+    }
+
+    h1 {
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
+    }
+
+    .table-header,
+    .table-row {
+        grid-template-columns: 40px 1fr 60px 70px 70px;
+        gap: 0.5rem;
+        padding: 0.75rem 0.5rem;
+        font-size: 0.85rem;
+    }
+
+    .game-form {
+        padding: 1rem 0;
+    }
+
+    .set-item {
+        gap: 0.3rem;
+    }
+
+    .set-item input {
+        width: 50px;
+        padding: 0.4rem;
+        font-size: 1rem;
+    }
+
+    .game-teams {
+        grid-template-columns: 1fr;
+    }
+
+    .team {
+        text-align: left;
+    }
+
+    .vs-label {
+        display: none;
+    }
+
+    .btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .message {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .navbar-brand {
+        font-size: 1.2rem;
+    }
+
+    .nav-btn {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.8rem;
+    }
+
+    .table-header,
+    .table-row {
+        grid-template-columns: 35px 1fr 50px 60px 60px;
+        font-size: 0.75rem;
+    }
+
+    .table-cell {
+        padding: 0 0.2rem;
+    }
+
+    h1 {
+        font-size: 1.1rem;
+    }
+
+    .vs-separator {
+        font-size: 1.2rem;
+    }
+
+    .form-group input {
+        padding: 0.6rem 0.5rem;
+        font-size: 0.95rem;
+    }
+
+    .set-item {
+        flex-wrap: nowrap;
+    }
+
+    .set-item label {
+        flex: 1;
+        margin-bottom: 0;
+    }
+
+    .set-item input {
+        width: 45px;
+        padding: 0.35rem;
+        font-size: 0.9rem;
+    }
+
+    .game-card {
+        padding: 1rem;
+    }
+
+    .game-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+/* Impressão */
+@media print {
+    .navbar, .nav-buttons, .btn, .search-input, .filters {
+        display: none;
+    }
+
+    .page {
+        display: block !important;
+    }
+
+    .game-card, .table-row {
+        page-break-inside: avoid;
+    }
+}
+
+</style>
+</head>
+<body>
+    <div id="app">
+        <!-- Navegação -->
+        <nav class="navbar">
+            <div class="navbar-container">
+                <div class="navbar-brand">
+                                        <span>PADEL</span>
+                </div>
+                <div class="nav-buttons">
+                    <button class="nav-btn active" data-page="classificacao">Classificação</button>
+                    <button class="nav-btn" data-page="novo-jogo">Novo Jogo</button>
+                    <button class="nav-btn" data-page="historico">Histórico</button>
+                </div>
+                <button id="btn-close-app" class="btn btn-secondary btn-close" type="button">Fechar</button>
+            </div>
+        </nav>
+
+        <!-- Página: Classificação -->
+        <div id="classificacao" class="page active">
+            <div class="container">
+                <h1>Classificação Geral</h1>
+                
+                <div class="filters">
+                    <input type="text" id="search-jogador" placeholder="🔍 Procurar jogador..." class="search-input">
+                </div>
+
+                <div id="classificacao-container" class="classificacao-table">
+                    <div class="table-header">
+                        <div class="table-cell rank">Pos</div>
+                        <div class="table-cell name">Jogador</div>
+                        <div class="table-cell pts">Pts</div>
+                        <div class="table-cell stats">Jogos</div>
+                        <div class="table-cell stats">V-D</div>
+                    </div>
+                    <div id="clasificacao-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Página: Novo Jogo -->
+        <div id="novo-jogo" class="page">
+            <div class="container">
+                <h1>Registar Novo Jogo</h1>
+                
+                <form id="form-novo-jogo" class="game-form">
+                    <div class="form-section">
+                        <h3>Equipa A</h3>
+                        <div class="form-group">
+                            <label>Jogador 1 *</label>
+                            <input type="text" id="equipa-a-j1" placeholder="Nome..." list="jogadores-list" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Jogador 2 *</label>
+                            <input type="text" id="equipa-a-j2" placeholder="Nome..." list="jogadores-list" required>
+                        </div>
+                    </div>
+
+                    <div class="vs-separator">VS</div>
+
+                    <div class="form-section">
+                        <h3>Equipa B</h3>
+                        <div class="form-group">
+                            <label>Jogador 1 *</label>
+                            <input type="text" id="equipa-b-j1" placeholder="Nome..." list="jogadores-list" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Jogador 2 *</label>
+                            <input type="text" id="equipa-b-j2" placeholder="Nome..." list="jogadores-list" required>
+                        </div>
+                    </div>
+
+                    <datalist id="jogadores-list"></datalist>
+
+                    <div class="form-section">
+                        <h3>Resultado (Best of 3 Sets)</h3>
+                        
+                        <div class="sets-container">
+                            <div class="set-item">
+                                <label>Set 1: Equipa A</label>
+                                <input type="number" id="set1-a" min="0" max="10" required>
+                                <span class="vs">-</span>
+                                <input type="number" id="set1-b" min="0" max="10" required>
+                                <label>Equipa B</label>
+                            </div>
+
+                            <div class="set-item">
+                                <label>Set 2: Equipa A</label>
+                                <input type="number" id="set2-a" min="0" max="10" required>
+                                <span class="vs">-</span>
+                                <input type="number" id="set2-b" min="0" max="10" required>
+                                <label>Equipa B</label>
+                            </div>
+
+                            <div class="set-item">
+                                <label>Set 3: Equipa A</label>
+                                <input type="number" id="set3-a" min="0" max="10">
+                                <span class="vs">-</span>
+                                <input type="number" id="set3-b" min="0" max="10">
+                                <label>Equipa B (se necessário)</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Data do Jogo</label>
+                        <input type="date" id="data-jogo">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Guardar Jogo</button>
+                    <button type="reset" class="btn btn-secondary">Limpar</button>
+                </form>
+
+                <div id="msg-jogo" class="message"></div>
+            </div>
+        </div>
+
+        <!-- Página: Histórico -->
+        <div id="historico" class="page">
+            <div class="container">
+                <h1>Histórico de Jogos</h1>
+                
+                <div class="filters">
+                    <button id="btn-ordenar" class="btn btn-small">Ordenar por Data ↓</button>
+                    <button id="btn-limpar-historico" class="btn btn-small btn-danger">Limpar Histórico</button>
+                </div>
+
+                <div id="historico-container" class="games-list">
+                    <!-- Jogos serão preenchidos aqui -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    
+<script>
+/**
+ * Sistema de Gestão de Base de Dados para Padel
+ * Armazenamento em localStorage
+ */
+
+class PadelDatabase {
+    constructor() {
+        this.STORAGE_KEY_GAMES = 'padel_games';
+        this.STORAGE_KEY_PLAYERS = 'padel_players';
+        this.STORAGE_KEY_STATS = 'padel_stats';
+        this.initializeDatabase();
+    }
+
+    /**
+     * Inicializa a base de dados (cria estruturas vazias se não existirem)
+     */
+    initializeDatabase() {
+        if (!localStorage.getItem(this.STORAGE_KEY_GAMES)) {
+            localStorage.setItem(this.STORAGE_KEY_GAMES, JSON.stringify([]));
+        }
+        if (!localStorage.getItem(this.STORAGE_KEY_PLAYERS)) {
+            localStorage.setItem(this.STORAGE_KEY_PLAYERS, JSON.stringify({}));
+        }
+        if (!localStorage.getItem(this.STORAGE_KEY_STATS)) {
+            localStorage.setItem(this.STORAGE_KEY_STATS, JSON.stringify({}));
+        }
+    }
+
+    /**
+     * Adiciona um novo jogo à base de dados
+     */
+    addGame(gameData) {
+        try {
+            const games = JSON.parse(localStorage.getItem(this.STORAGE_KEY_GAMES)) || [];
+            const newGame = {
+                id: Date.now(),
+                date: gameData.date || new Date().toISOString().split('T')[0],
+                equipa_a: {
+                    j1: gameData.equipa_a_j1.trim(),
+                    j2: gameData.equipa_a_j2.trim()
+                },
+                equipa_b: {
+                    j1: gameData.equipa_b_j1.trim(),
+                    j2: gameData.equipa_b_j2.trim()
+                },
+                sets: gameData.sets,
+                winner: gameData.winner // 'A' ou 'B'
+            };
+
+            games.push(newGame);
+            localStorage.setItem(this.STORAGE_KEY_GAMES, JSON.stringify(games));
+
+            // Atualizar estatísticas dos jogadores
+            this.updatePlayerStats(newGame);
+
+            return newGame;
+        } catch (error) {
+            console.error('Erro ao adicionar jogo:', error);
+            throw new Error('Erro ao guardar jogo');
+        }
+    }
+
+    /**
+     * Atualiza as estatísticas dos jogadores após um jogo
+     */
+    updatePlayerStats(game) {
+        const stats = JSON.parse(localStorage.getItem(this.STORAGE_KEY_STATS)) || {};
+        const players = JSON.parse(localStorage.getItem(this.STORAGE_KEY_PLAYERS)) || {};
+
+        // Criar entrada para cada jogador se não existir
+        [game.equipa_a.j1, game.equipa_a.j2, game.equipa_b.j1, game.equipa_b.j2].forEach(jogador => {
+            if (!stats[jogador]) {
+                stats[jogador] = {
+                    nome: jogador,
+                    pontos: 0,
+                    jogos: 0,
+                    vitorias: 0,
+                    derrotas: 0,
+                    setsGanhos: 0,
+                    setsPerdidos: 0
+                };
+            }
+            if (!players[jogador]) {
+                players[jogador] = true;
+            }
+        });
+
+        // Calcular pontos com base no resultado
+        if (game.winner === 'A') {
+            // Equipa A venceu: 3 pontos cada
+            stats[game.equipa_a.j1].pontos += 3;
+            stats[game.equipa_a.j2].pontos += 3;
+            stats[game.equipa_a.j1].vitorias += 1;
+            stats[game.equipa_a.j2].vitorias += 1;
+
+            // Equipa B perdeu: 1 ponto cada
+            stats[game.equipa_b.j1].pontos += 1;
+            stats[game.equipa_b.j2].pontos += 1;
+            stats[game.equipa_b.j1].derrotas += 1;
+            stats[game.equipa_b.j2].derrotas += 1;
+        } else {
+            // Equipa B venceu: 3 pontos cada
+            stats[game.equipa_b.j1].pontos += 3;
+            stats[game.equipa_b.j2].pontos += 3;
+            stats[game.equipa_b.j1].vitorias += 1;
+            stats[game.equipa_b.j2].vitorias += 1;
+
+            // Equipa A perdeu: 1 ponto cada
+            stats[game.equipa_a.j1].pontos += 1;
+            stats[game.equipa_a.j2].pontos += 1;
+            stats[game.equipa_a.j1].derrotas += 1;
+            stats[game.equipa_a.j2].derrotas += 1;
+        }
+
+        // Atualizar sets ganhos/perdidos
+        stats[game.equipa_a.j1].jogos += 1;
+        stats[game.equipa_a.j2].jogos += 1;
+        stats[game.equipa_b.j1].jogos += 1;
+        stats[game.equipa_b.j2].jogos += 1;
+
+        // Contar sets
+        game.sets.forEach(set => {
+            const scoreA = parseInt(set.a) || 0;
+            const scoreB = parseInt(set.b) || 0;
+
+            if (scoreA > scoreB) {
+                stats[game.equipa_a.j1].setsGanhos += 1;
+                stats[game.equipa_a.j2].setsGanhos += 1;
+                stats[game.equipa_b.j1].setsPerdidos += 1;
+                stats[game.equipa_b.j2].setsPerdidos += 1;
+            } else if (scoreB > scoreA) {
+                stats[game.equipa_b.j1].setsGanhos += 1;
+                stats[game.equipa_b.j2].setsGanhos += 1;
+                stats[game.equipa_a.j1].setsPerdidos += 1;
+                stats[game.equipa_a.j2].setsPerdidos += 1;
+            }
+        });
+
+        localStorage.setItem(this.STORAGE_KEY_STATS, JSON.stringify(stats));
+        localStorage.setItem(this.STORAGE_KEY_PLAYERS, JSON.stringify(players));
+    }
+
+    /**
+     * Obtém a classificação ordenada dos jogadores
+     */
+    getClassificacao() {
+        const stats = JSON.parse(localStorage.getItem(this.STORAGE_KEY_STATS)) || {};
+        
+        return Object.values(stats)
+            .sort((a, b) => {
+                // Ordenar por pontos (descendente)
+                if (b.pontos !== a.pontos) {
+                    return b.pontos - a.pontos;
+                }
+                // Se iguais, ordenar por diferença de vitórias/derrotas
+                const diffA = a.vitorias - a.derrotas;
+                const diffB = b.vitorias - b.derrotas;
+                if (diffB !== diffA) {
+                    return diffB - diffA;
+                }
+                // Se iguais, ordenar por vitórias
+                return b.vitorias - a.vitorias;
+            })
+            .map((player, index) => ({
+                ...player,
+                posicao: index + 1,
+                diferenca: player.vitorias - player.derrotas
+            }));
+    }
+
+    /**
+     * Obtém todos os jogos
+     */
+    getGames() {
+        return JSON.parse(localStorage.getItem(this.STORAGE_KEY_GAMES)) || [];
+    }
+
+    /**
+     * Obtém todos os nomes de jogadores (para autocomplete)
+     */
+    getJogadoresList() {
+        const players = JSON.parse(localStorage.getItem(this.STORAGE_KEY_PLAYERS)) || {};
+        return Object.keys(players);
+    }
+
+    /**
+     * Remove um jogo e recalcula as estatísticas
+     */
+    removeGame(gameId) {
+        const games = JSON.parse(localStorage.getItem(this.STORAGE_KEY_GAMES)) || [];
+        const gameIndex = games.findIndex(g => g.id === gameId);
+
+        if (gameIndex !== -1) {
+            games.splice(gameIndex, 1);
+            localStorage.setItem(this.STORAGE_KEY_GAMES, JSON.stringify(games));
+            
+            // Recalcular todas as estatísticas
+            this.recalculateAllStats();
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Recalcula todas as estatísticas com base nos jogos
+     */
+    recalculateAllStats() {
+        const games = JSON.parse(localStorage.getItem(this.STORAGE_KEY_GAMES)) || [];
+        const stats = {};
+        const players = {};
+
+        // Inicializar stats para todos os jogadores
+        games.forEach(game => {
+            [game.equipa_a.j1, game.equipa_a.j2, game.equipa_b.j1, game.equipa_b.j2].forEach(jogador => {
+                if (!stats[jogador]) {
+                    stats[jogador] = {
+                        nome: jogador,
+                        pontos: 0,
+                        jogos: 0,
+                        vitorias: 0,
+                        derrotas: 0,
+                        setsGanhos: 0,
+                        setsPerdidos: 0
+                    };
+                }
+                if (!players[jogador]) {
+                    players[jogador] = true;
+                }
+            });
+        });
+
+        // Recalcular para cada jogo
+        games.forEach(game => {
+            if (game.winner === 'A') {
+                stats[game.equipa_a.j1].pontos += 3;
+                stats[game.equipa_a.j2].pontos += 3;
+                stats[game.equipa_a.j1].vitorias += 1;
+                stats[game.equipa_a.j2].vitorias += 1;
+
+                stats[game.equipa_b.j1].pontos += 1;
+                stats[game.equipa_b.j2].pontos += 1;
+                stats[game.equipa_b.j1].derrotas += 1;
+                stats[game.equipa_b.j2].derrotas += 1;
+            } else {
+                stats[game.equipa_b.j1].pontos += 3;
+                stats[game.equipa_b.j2].pontos += 3;
+                stats[game.equipa_b.j1].vitorias += 1;
+                stats[game.equipa_b.j2].vitorias += 1;
+
+                stats[game.equipa_a.j1].pontos += 1;
+                stats[game.equipa_a.j2].pontos += 1;
+                stats[game.equipa_a.j1].derrotas += 1;
+                stats[game.equipa_a.j2].derrotas += 1;
+            }
+
+            stats[game.equipa_a.j1].jogos += 1;
+            stats[game.equipa_a.j2].jogos += 1;
+            stats[game.equipa_b.j1].jogos += 1;
+            stats[game.equipa_b.j2].jogos += 1;
+
+            game.sets.forEach(set => {
+                const scoreA = parseInt(set.a) || 0;
+                const scoreB = parseInt(set.b) || 0;
+
+                if (scoreA > scoreB) {
+                    stats[game.equipa_a.j1].setsGanhos += 1;
+                    stats[game.equipa_a.j2].setsGanhos += 1;
+                    stats[game.equipa_b.j1].setsPerdidos += 1;
+                    stats[game.equipa_b.j2].setsPerdidos += 1;
+                } else if (scoreB > scoreA) {
+                    stats[game.equipa_b.j1].setsGanhos += 1;
+                    stats[game.equipa_b.j2].setsGanhos += 1;
+                    stats[game.equipa_a.j1].setsPerdidos += 1;
+                    stats[game.equipa_a.j2].setsPerdidos += 1;
+                }
+            });
+        });
+
+        localStorage.setItem(this.STORAGE_KEY_STATS, JSON.stringify(stats));
+        localStorage.setItem(this.STORAGE_KEY_PLAYERS, JSON.stringify(players));
+    }
+
+    /**
+     * Limpa toda a base de dados
+     */
+    clearAll() {
+        localStorage.removeItem(this.STORAGE_KEY_GAMES);
+        localStorage.removeItem(this.STORAGE_KEY_PLAYERS);
+        localStorage.removeItem(this.STORAGE_KEY_STATS);
+        this.initializeDatabase();
+    }
+}
+
+// Criar instância global da base de dados
+const db = new PadelDatabase();
+
+</script>
+<script>
+/**
+ * Aplicação Principal de Gestão de Resultados de Padel
+ */
+
+class PadelApp {
+    constructor() {
+        this.currentPage = 'classificacao';
+        this.sortOrder = 'desc'; // Ordenação do histórico
+        this.init();
+    }
+
+    init() {
+        this.setupEventListeners();
+        this.setDataAtual();
+        this.renderClasificacao();
+        this.updateJogadoresList();
+    }
+
+    /**
+     * Configurar event listeners
+     */
+    setupEventListeners() {
+        // Navegação
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => this.navegarPagina(e.target.dataset.page));
+        });
+
+        // Formulário de novo jogo
+        document.getElementById('form-novo-jogo').addEventListener('submit', (e) => this.handleNovoJogo(e));
+
+        // Busca na classificação
+        document.getElementById('search-jogador').addEventListener('input', (e) => this.filterClasificacao(e.target.value));
+
+        // Ordenação do histórico
+        document.getElementById('btn-ordenar').addEventListener('click', () => this.toggleOrdenacao());
+
+        // Limpar histórico
+        document.getElementById('btn-limpar-historico').addEventListener('click', () => this.limparHistorico());
+
+        // Fechar aplicação
+        const btnClose = document.getElementById('btn-close-app');
+        if (btnClose) {
+            btnClose.addEventListener('click', () => this.closeApplication());
+        }
+    }
+
+    /**
+     * Definir data atual no input
+     */
+    setDataAtual() {
+        const hoje = new Date().toISOString().split('T')[0];
+        document.getElementById('data-jogo').value = hoje;
+    }
+
+    /**
+     * Navegar entre páginas
+     */
+    navegarPagina(page) {
+        // Remover active de todas as páginas e botões
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+        // Ativar página e botão selecionados
+        document.getElementById(page).classList.add('active');
+        document.querySelector(`[data-page="${page}"]`).classList.add('active');
+
+        this.currentPage = page;
+
+        // Renderizar conteúdo apropriado
+        switch (page) {
+            case 'classificacao':
+                this.renderClasificacao();
+                break;
+            case 'historico':
+                this.renderHistorico();
+                break;
+            case 'novo-jogo':
+                document.getElementById('msg-jogo').innerHTML = '';
+                break;
+        }
+    }
+
+    /**
+     * Renderizar classificação
+     */
+    renderClasificacao() {
+        const classificacao = db.getClassificacao();
+        const container = document.getElementById('clasificacao-list');
+
+        if (classificacao.length === 0) {
+            container.innerHTML = '<div style="text-align: center; padding: 2rem; color: #999;">Nenhum jogo registado ainda</div>';
+            return;
+        }
+
+        container.innerHTML = classificacao.map((player, index) => {
+            let topClass = '';
+            if (index === 0) topClass = 'top1';
+            else if (index === 1) topClass = 'top2';
+            else if (index === 2) topClass = 'top3';
+
+            return `
+                <div class="table-row ${topClass}">
+                    <div class="table-cell rank">${player.posicao}${this.getMedalha(index)}</div>
+                    <div class="table-cell name">${player.nome}</div>
+                    <div class="table-cell pts">${player.pontos}</div>
+                    <div class="table-cell stats">${player.jogos}</div>
+                    <div class="table-cell stats">${player.vitorias}-${player.derrotas}</div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    /**
+     * Obter medalha para top 3
+     */
+    getMedalha(posicao) {
+        if (posicao === 0) return '🥇';
+        if (posicao === 1) return '🥈';
+        if (posicao === 2) return '🥉';
+        return '';
+    }
+
+    /**
+     * Filtrar classificação por nome
+     */
+    filterClasificacao(searchTerm) {
+        const classificacao = db.getClassificacao();
+        const filtered = classificacao.filter(p => 
+            p.nome.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        
+        const container = document.getElementById('clasificacao-list');
+        
+        if (filtered.length === 0) {
+            container.innerHTML = '<div style="text-align: center; padding: 2rem; color: #999;">Jogador não encontrado</div>';
+            return;
+        }
+
+        container.innerHTML = filtered.map((player, index) => {
+            let topClass = '';
+            if (player.posicao === 1) topClass = 'top1';
+            else if (player.posicao === 2) topClass = 'top2';
+            else if (player.posicao === 3) topClass = 'top3';
+
+            return `
+                <div class="table-row ${topClass}">
+                    <div class="table-cell rank">${player.posicao}${this.getMedalha(player.posicao - 1)}</div>
+                    <div class="table-cell name">${player.nome}</div>
+                    <div class="table-cell pts">${player.pontos}</div>
+                    <div class="table-cell stats">${player.jogos}</div>
+                    <div class="table-cell stats">${player.vitorias}-${player.derrotas}</div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    /**
+     * Atualizar lista de jogadores para autocomplete
+     */
+    updateJogadoresList() {
+        const jogadores = db.getJogadoresList();
+        const datalist = document.getElementById('jogadores-list');
+        
+        datalist.innerHTML = jogadores.map(j => `<option value="${j}">`).join('');
+    }
+
+    /**
+     * Validar e processar novo jogo
+     */
+    handleNovoJogo(e) {
+        e.preventDefault();
+
+        try {
+            // Validações básicas
+            const equipa_a_j1 = document.getElementById('equipa-a-j1').value.trim();
+            const equipa_a_j2 = document.getElementById('equipa-a-j2').value.trim();
+            const equipa_b_j1 = document.getElementById('equipa-b-j1').value.trim();
+            const equipa_b_j2 = document.getElementById('equipa-b-j2').value.trim();
+
+            if (!equipa_a_j1 || !equipa_a_j2 || !equipa_b_j1 || !equipa_b_j2) {
+                throw new Error('Por favor, preencha todos os nomes dos jogadores');
+            }
+
+            // Verificar se não há jogadores repetidos
+            const todosJogadores = [equipa_a_j1, equipa_a_j2, equipa_b_j1, equipa_b_j2];
+            const uniqueJogadores = new Set(todosJogadores);
+            if (uniqueJogadores.size !== 4) {
+                throw new Error('Não pode haver jogadores repetidos');
+            }
+
+            // Obter scores dos sets
+            const sets = [];
+            for (let i = 1; i <= 3; i++) {
+                const scoreA = document.getElementById(`set${i}-a`).value;
+                const scoreB = document.getElementById(`set${i}-b`).value;
+
+                // Set é obrigatório apenas se for o primeiro ou segundo
+                if (i <= 2) {
+                    if (!scoreA || !scoreB) {
+                        throw new Error(`Set ${i} incompleto`);
+                    }
+                    sets.push({ a: parseInt(scoreA), b: parseInt(scoreB) });
+                } else if (scoreA || scoreB) {
+                    // Set 3 é opcional, mas se preenchido deve ter ambos os valores
+                    if (!scoreA || !scoreB) {
+                        throw new Error('Set 3 deve ter ambos os valores ou estar vazio');
+                    }
+                    sets.push({ a: parseInt(scoreA), b: parseInt(scoreB) });
+                }
+            }
+
+            // Validar sets (não podem estar vazios os dois primeiros)
+            if (sets.length < 2) {
+                throw new Error('Deve registar pelo menos 2 sets');
+            }
+
+            // Determinar vencedor (best of 3)
+            let setsVitaA = 0;
+            let setsVitaB = 0;
+            let winner = null;
+
+            for (let i = 0; i < sets.length; i++) {
+                if (sets[i].a > sets[i].b) {
+                    setsVitaA++;
+                } else if (sets[i].b > sets[i].a) {
+                    setsVitaB++;
+                } else {
+                    throw new Error(`Set ${i + 1} não pode ter empate`);
+                }
+
+                // Se alguém já ganhou 2 sets, não há terceiro set
+                if (setsVitaA === 2) {
+                    winner = 'A';
+                    break;
+                }
+                if (setsVitaB === 2) {
+                    winner = 'B';
+                    break;
+                }
+            }
+
+            if (!winner) {
+                throw new Error('Resultado incompleto ou inválido');
+            }
+
+            // Guardar jogo
+            const gameData = {
+                equipa_a_j1,
+                equipa_a_j2,
+                equipa_b_j1,
+                equipa_b_j2,
+                sets: sets,
+                winner: winner,
+                date: document.getElementById('data-jogo').value
+            };
+
+            db.addGame(gameData);
+
+            // Mostrar mensagem de sucesso
+            const msgElement = document.getElementById('msg-jogo');
+            msgElement.className = 'message success';
+            msgElement.textContent = '✅ Jogo guardado com sucesso!';
+
+            // Limpar formulário
+            document.getElementById('form-novo-jogo').reset();
+            this.setDataAtual();
+            this.updateJogadoresList();
+
+            // Esconder mensagem após 3 segundos
+            setTimeout(() => {
+                msgElement.textContent = '';
+                msgElement.className = 'message';
+            }, 3000);
+
+        } catch (error) {
+            const msgElement = document.getElementById('msg-jogo');
+            msgElement.className = 'message error';
+            msgElement.textContent = '❌ ' + error.message;
+        }
+    }
+
+    /**
+     * Renderizar histórico de jogos
+     */
+    renderHistorico() {
+        let games = db.getGames();
+
+        // Ordenar por data
+        games.sort((a, b) => {
+            const dateA = new Date(a.date);
+            const dateB = new Date(b.date);
+            return this.sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+        });
+
+        const container = document.getElementById('historico-container');
+
+        if (games.length === 0) {
+            container.innerHTML = '<div style="text-align: center; padding: 2rem; color: #999;">Nenhum jogo registado</div>';
+            return;
+        }
+
+        container.innerHTML = games.map(game => {
+            const setsA = game.sets.map(s => `${s.a}`).join('-');
+            const setsB = game.sets.map(s => `${s.b}`).join('-');
+            
+            const setDetails = game.sets.map((s, i) => `Set ${i + 1}: ${s.a}-${s.b}`).join(' | ');
+
+            const teamAWinner = game.winner === 'A';
+            const teamBWinner = game.winner === 'B';
+
+            return `
+                <div class="game-card">
+                    <div class="game-header">
+                        <div>
+                            <div class="game-date">📅 ${this.formatarData(game.date)}</div>
+                        </div>
+                        <div class="game-score">${setsA} vs ${setsB}</div>
+                        <button class="btn-delete" onclick="app.deleteGame(${game.id})">Remover</button>
+                    </div>
+
+                    <div class="game-teams">
+                        <div class="team ${teamAWinner ? 'winner' : ''}">
+                            <div class="team-name">EQUIPA A ${teamAWinner ? '🏆' : ''}</div>
+                            <div class="team-player">👤 ${game.equipa_a.j1}</div>
+                            <div class="team-player">👤 ${game.equipa_a.j2}</div>
+                        </div>
+                        <div class="vs-label">VS</div>
+                        <div class="team ${teamBWinner ? 'winner' : ''}">
+                            <div class="team-name">EQUIPA B ${teamBWinner ? '🏆' : ''}</div>
+                            <div class="team-player">👤 ${game.equipa_b.j1}</div>
+                            <div class="team-player">👤 ${game.equipa_b.j2}</div>
+                        </div>
+                    </div>
+
+                    <div class="game-sets">
+                        📊 ${setDetails}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    /**
+     * Formatar data para formato legível
+     */
+    formatarData(dateStr) {
+        const date = new Date(dateStr + 'T00:00:00');
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        return date.toLocaleDateString('pt-PT', options);
+    }
+
+    /**
+     * Alternar ordenação do histórico
+     */
+    toggleOrdenacao() {
+        this.sortOrder = this.sortOrder === 'desc' ? 'asc' : 'desc';
+        const btn = document.getElementById('btn-ordenar');
+        btn.textContent = this.sortOrder === 'desc' ? 'Ordenar por Data ↓' : 'Ordenar por Data ↑';
+        this.renderHistorico();
+    }
+
+    /**
+     * Remover um jogo
+     */
+    deleteGame(gameId) {
+        if (confirm('Tem a certeza que deseja remover este jogo? Esta ação não pode ser desfeita.')) {
+            db.removeGame(gameId);
+            this.renderHistorico();
+            this.renderClasificacao();
+            this.updateJogadoresList();
+        }
+    }
+
+    /**
+     * Limpar todo o histórico
+     */
+    limparHistorico() {
+        if (confirm('⚠️ AVISO: Isto vai remover TODOS os jogos e zerar a classificação. Tem a certeza?')) {
+            if (confirm('Esta ação é irreversível! Deseja realmente continuar?')) {
+                db.clearAll();
+                this.renderHistorico();
+                this.renderClasificacao();
+                this.updateJogadoresList();
+                alert('✅ Base de dados limpa com sucesso!');
+            }
+        }
+    }
+
+    /**
+     * Tenta fechar a janela do navegador
+     */
+    closeApplication() {
+        try {
+            window.open('', '_self');
+            window.close();
+        } catch (error) {
+            console.warn('Falha ao fechar automaticamente:', error);
+        }
+
+        alert('Para encerrar a aplicação, feche esta aba ou janela do navegador.');
+    }
+}
+
+// Inicializar aplicação quando o DOM estiver carregado
+document.addEventListener('DOMContentLoaded', () => {
+    window.app = new PadelApp();
+});
+
+</script>
+</body>
+</html>
